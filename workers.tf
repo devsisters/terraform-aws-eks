@@ -178,7 +178,11 @@ resource "aws_launch_configuration" "workers" {
     "key_name",
     local.workers_group_defaults["key_name"],
   )
-  user_data_base64 = base64encode(data.template_file.userdata.*.rendered[count.index])
+  user_data_base64 = (
+    lookup(var.worker_groups[count.index], "platform", local.workers_group_defaults["platform"]) == "windows" ?
+    base64encode(data.template_file.userdata_windows.*.rendered[count.index]) :
+    base64encode(data.template_file.userdata.*.rendered[count.index])
+  )
   ebs_optimized = lookup(
     var.worker_groups[count.index],
     "ebs_optimized",

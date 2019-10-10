@@ -86,7 +86,7 @@ EOF
 }
 
 data "template_file" "userdata" {
-  count    = local.worker_group_count
+  count = local.worker_group_count
   template = file("${path.module}/templates/userdata.sh.tpl")
 
   vars = {
@@ -115,6 +115,38 @@ data "template_file" "userdata" {
     )
   }
 }
+
+data "template_file" "userdata_windows" {
+  count = local.worker_group_count
+  template = file("${path.module}/templates/userdata_windows.tpl")
+
+  vars = {
+    cluster_name        = aws_eks_cluster.this.name
+    endpoint            = aws_eks_cluster.this.endpoint
+    cluster_auth_base64 = aws_eks_cluster.this.certificate_authority[0].data
+    pre_userdata = lookup(
+      var.worker_groups[count.index],
+      "pre_userdata",
+      local.workers_group_defaults["pre_userdata"],
+    )
+    additional_userdata = lookup(
+      var.worker_groups[count.index],
+      "additional_userdata",
+      local.workers_group_defaults["additional_userdata"],
+    )
+    bootstrap_extra_args = lookup(
+      var.worker_groups[count.index],
+      "bootstrap_extra_args",
+      local.workers_group_defaults["bootstrap_extra_args"],
+    )
+    kubelet_extra_args = lookup(
+      var.worker_groups[count.index],
+      "kubelet_extra_args",
+      local.workers_group_defaults["kubelet_extra_args"],
+    )
+  }
+}
+
 
 data "template_file" "launch_template_userdata" {
   count    = local.worker_group_launch_template_count
